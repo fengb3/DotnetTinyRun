@@ -20,21 +20,21 @@ dotnet tool install --global DotnetTinyRun
 
 ```bash
 # Inline code
-dotnet-tinyrun "1 + 2"
-dotnet-tinyrun "DateTime.Now.ToString(\"o\")"
+dotnet-tiny-run "1 + 2"
+dotnet-tiny-run "DateTime.Now.ToString(\"o\")"
 
 # LINQPad-style .Dump()
-dotnet-tinyrun "new[] { \"apple\", \"banana\", \"cherry\" }.Dump()"
-dotnet-tinyrun "Enumerable.Range(1, 10).Where(x => x % 2 == 0).Dump()"
+dotnet-tiny-run "new[] { \"apple\", \"banana\", \"cherry\" }.Dump()"
+dotnet-tiny-run "Enumerable.Range(1, 10).Where(x => x % 2 == 0).Dump()"
 
 # Load project context (references, usings, namespaces)
-dotnet-tinyrun -p ./src/MyApp/MyApp.csproj "DbContext.Users.Count()"
+dotnet-tiny-run -p ./src/MyApp/MyApp.csproj "DbContext.Users.Count()"
 
 # Run a .csx script file
-dotnet-tinyrun -f script.csx
+dotnet-tiny-run -f script.csx
 
 # Pipe via stdin
-echo "DateTime.Now" | dotnet-tinyrun
+echo "DateTime.Now" | dotnet-tiny-run
 ```
 
 ## Options
@@ -87,7 +87,7 @@ With `--project`, DotnetTinyRun will:
 This lets you run one-liners against your project's full type system:
 
 ```bash
-dotnet-tinyrun -p ./MyWebApp/MyWebApp.csproj "new HttpClient().GetStringAsync(\"https://example.com\").Result.Length"
+dotnet-tiny-run -p ./MyWebApp/MyWebApp.csproj "new HttpClient().GetStringAsync(\"https://example.com\").Result.Length"
 ```
 
 ## Build from Source

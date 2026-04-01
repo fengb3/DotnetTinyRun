@@ -20,21 +20,21 @@ dotnet tool install --global DotnetTinyRun
 
 ```bash
 # 内联代码
-dotnet-tinyrun "1 + 2"
-dotnet-tinyrun "DateTime.Now.ToString(\"o\")"
+dotnet-tiny-run "1 + 2"
+dotnet-tiny-run "DateTime.Now.ToString(\"o\")"
 
 # LINQPad 风格 .Dump()
-dotnet-tinyrun "new[] { \"apple\", \"banana\", \"cherry\" }.Dump()"
-dotnet-tinyrun "Enumerable.Range(1, 10).Where(x => x % 2 == 0).Dump()"
+dotnet-tiny-run "new[] { \"apple\", \"banana\", \"cherry\" }.Dump()"
+dotnet-tiny-run "Enumerable.Range(1, 10).Where(x => x % 2 == 0).Dump()"
 
 # 加载项目上下文（引用、using、命名空间）
-dotnet-tinyrun -p ./src/MyApp/MyApp.csproj "DbContext.Users.Count()"
+dotnet-tiny-run -p ./src/MyApp/MyApp.csproj "DbContext.Users.Count()"
 
 # 运行 .csx 脚本文件
-dotnet-tinyrun -f script.csx
+dotnet-tiny-run -f script.csx
 
 # 通过 stdin 管道输入
-echo "DateTime.Now" | dotnet-tinyrun
+echo "DateTime.Now" | dotnet-tiny-run
 ```
 
 ## 选项
@@ -87,7 +87,7 @@ new[] { 1, 2, 3 }.Dump()
 这让你可以直接对项目的完整类型系统执行单行代码：
 
 ```bash
-dotnet-tinyrun -p ./MyWebApp/MyWebApp.csproj "new HttpClient().GetStringAsync(\"https://example.com\").Result.Length"
+dotnet-tiny-run -p ./MyWebApp/MyWebApp.csproj "new HttpClient().GetStringAsync(\"https://example.com\").Result.Length"
 ```
 
 ## 从源码构建
