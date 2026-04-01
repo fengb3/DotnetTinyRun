@@ -1,6 +1,6 @@
 // order-analysis.csx
 // Run with: dotnet-tiny-run -p ./demo/AspNetApp/AspNetApp.csproj -f ./demo/AspNetApp/scripts/order-analysis.csx
-// Purpose: Analyse orders and find revenue statistics
+// Purpose: Analyze orders and find revenue statistics
 
 using AspNetApp.Data;
 using AspNetApp.Models;
