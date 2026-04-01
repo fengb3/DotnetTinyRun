@@ -73,6 +73,8 @@ public sealed class ReferenceResolver
             "System.Runtime.dll",
             "System.Console.dll",
             "System.Linq.dll",
+            "System.Linq.Expressions.dll",
+            "System.Linq.Queryable.dll",
             "System.Collections.dll",
             "System.IO.FileSystem.dll",
             "System.Net.Http.dll",
@@ -81,6 +83,7 @@ public sealed class ReferenceResolver
             "System.Text.RegularExpressions.dll",
             "System.ObjectModel.dll",
             "System.ComponentModel.dll",
+            "System.Reflection.dll",
         };
 
         foreach (var dll in coreDlls)
