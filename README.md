@@ -1,4 +1,10 @@
+**[English](README.md)** | **[中文](README.zh-CN.md)**
+
 # DotnetTinyRun
+
+[![NuGet](https://img.shields.io/nuget/v/DotnetTinyRun)](https://www.nuget.org/packages/DotnetTinyRun)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/DotnetTinyRun)](https://www.nuget.org/packages/DotnetTinyRun)
+[![License](https://img.shields.io/github/license/fengb3/DotnetTinyRun)](LICENSE)
 
 A lightweight CLI tool for running C# scripts — like a CLI version of LINQPad.
 
