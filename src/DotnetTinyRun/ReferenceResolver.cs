@@ -150,7 +150,14 @@ public sealed class ReferenceResolver
         }
 
         ms.Seek(0, SeekOrigin.Begin);
-        AssemblyLoadContext.Default.LoadFromStream(ms);
+        try
+        {
+            AssemblyLoadContext.Default.LoadFromStream(ms);
+        }
+        catch (FileLoadException)
+        {
+            // Already loaded — safe to ignore, we just need the MetadataReference
+        }
         ms.Seek(0, SeekOrigin.Begin);
         return MetadataReference.CreateFromStream(ms);
     }
