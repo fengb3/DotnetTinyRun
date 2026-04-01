@@ -10,7 +10,21 @@
     <RootNamespace>DotnetTinyRun</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- NuGet package metadata -->
+    <Description>A lightweight CLI tool for running C# scripts — like a CLI version of LINQPad.</Description>
+    <Authors>fengb3</Authors>
+    <PackageTags>dotnet tool script csharp roslin linqpad cli</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/fengb3/DotnetTinyRun</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/fengb3/DotnetTinyRun.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
