@@ -6,7 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-tiny-run</ToolCommandName>
     <PackageId>DotnetTinyRun</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <RootNamespace>DotnetTinyRun</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
