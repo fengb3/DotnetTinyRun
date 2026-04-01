@@ -62,7 +62,7 @@ jobs:
           path: ./nupkg/*.nupkg
 
   create-release:
-    needs: [check-version, build-aot, publish-nuget]
+    needs: [check-version, publish-nuget]
     runs-on: ubuntu-latest
 
     steps:
