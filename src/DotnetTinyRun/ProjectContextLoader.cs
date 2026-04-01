@@ -13,6 +13,8 @@ public sealed class ProjectContext
     public IReadOnlyList<MetadataReference> MetadataReferences { get; init; } = [];
     public IReadOnlyList<string> UsingDirectives { get; init; } = [];
     public string TargetAssemblyPath { get; init; } = "";
+    /// <summary>Additional directories to search when resolving assemblies at runtime.</summary>
+    public IReadOnlyList<string> AssemblySearchPaths { get; init; } = [];
 }
 
 public sealed partial class ProjectContextLoader
@@ -40,6 +42,23 @@ public sealed partial class ProjectContextLoader
         // Resolve dependencies using AssemblyDependencyResolver
         var metadataReferences = ResolveDependencies(targetAssemblyPath, debug);
 
+        // Also include shared framework assemblies referenced in runtimeconfig.json
+        var runtimeConfigPath = Path.ChangeExtension(targetAssemblyPath, ".runtimeconfig.json");
+        var assemblySearchPaths = new List<string>();
+        if (File.Exists(runtimeConfigPath))
+        {
+            var frameworkRefs = ResolveSharedFrameworkReferences(runtimeConfigPath, debug, out var frameworkDirs);
+            assemblySearchPaths.AddRange(frameworkDirs);
+            // Add only those not already covered by the project's own output
+            var existing = metadataReferences.Select(r => Path.GetFileName(r.Display ?? ""))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var r in frameworkRefs)
+            {
+                if (!existing.Contains(Path.GetFileName(r.Display ?? "")))
+                    metadataReferences.Add(r);
+            }
+        }
+
         // Auto-discover namespaces from the project's output assembly
         var namespaces = ExtractNamespaces(targetAssemblyPath);
         usings.AddRange(namespaces);
@@ -56,7 +75,113 @@ public sealed partial class ProjectContextLoader
             MetadataReferences = metadataReferences,
             UsingDirectives = usings,
             TargetAssemblyPath = targetAssemblyPath,
+            AssemblySearchPaths = assemblySearchPaths,
         };
+    }
+
+    private static List<MetadataReference> ResolveSharedFrameworkReferences(string runtimeConfigPath, bool debug, out List<string> frameworkDirs)
+    {
+        var references = new List<MetadataReference>();
+        frameworkDirs = new List<string>();
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(runtimeConfigPath));
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("runtimeOptions", out var runtimeOptions))
+                return references;
+
+            if (!runtimeOptions.TryGetProperty("frameworks", out var frameworks))
+                return references;
+
+            // Locate the dotnet shared directory next to the current runtime
+            // e.g. /usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.x -> /usr/share/dotnet/shared
+            var coreLibDir = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            // coreLibDir is like /usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.x
+            var sharedDir = Path.GetFullPath(Path.Combine(coreLibDir, "..", ".."));
+
+            foreach (var fw in frameworks.EnumerateArray())
+            {
+                if (!fw.TryGetProperty("name", out var nameElem) ||
+                    !fw.TryGetProperty("version", out var versionElem))
+                    continue;
+
+                var fwName = nameElem.GetString();
+                var fwVersion = versionElem.GetString();
+                if (fwName is null || fwVersion is null) continue;
+
+                // Skip the base runtime (already handled by GetCoreReferences in ReferenceResolver)
+                if (fwName.Equals("Microsoft.NETCore.App", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Resolve best-matching installed version
+                var fwDir = Path.Combine(sharedDir, fwName);
+                if (!Directory.Exists(fwDir))
+                {
+                    if (debug) OutputFormatter.WriteDebug($"Shared framework directory not found: {fwDir}");
+                    continue;
+                }
+
+                var resolvedDir = ResolveFrameworkVersion(fwDir, fwVersion);
+                if (resolvedDir is null)
+                {
+                    if (debug) OutputFormatter.WriteDebug($"No compatible version of {fwName} found in {fwDir}");
+                    continue;
+                }
+
+                if (debug) OutputFormatter.WriteDebug($"Loading shared framework: {fwName} from {resolvedDir}");
+                frameworkDirs.Add(resolvedDir);
+
+                foreach (var dll in Directory.GetFiles(resolvedDir, "*.dll"))
+                {
+                    try
+                    {
+                        references.Add(MetadataReference.CreateFromFile(dll));
+                    }
+                    catch (Exception ex) when (debug)
+                    {
+                        OutputFormatter.WriteDebug($"Could not load framework assembly {dll}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (debug)
+        {
+            OutputFormatter.WriteDebug($"Failed to parse runtimeconfig: {ex.Message}");
+        }
+
+        return references;
+    }
+
+    /// <summary>
+    /// Finds the best installed framework version that is compatible with the requested version.
+    /// Prefers exact match, then highest patch within same major.minor.
+    /// </summary>
+    private static string? ResolveFrameworkVersion(string frameworkDir, string requestedVersion)
+    {
+        if (!Version.TryParse(requestedVersion, out var requested))
+            return null;
+
+        var installedVersions = Directory.GetDirectories(frameworkDir)
+            .Select(d => (Path: d, Version: Version.TryParse(Path.GetFileName(d), out var v) ? v : null))
+            .Where(x => x.Version is not null)
+            .OrderByDescending(x => x.Version)
+            .ToList();
+
+        // Try exact match first
+        var exact = installedVersions.FirstOrDefault(x => x.Version == requested);
+        if (exact.Path is not null) return exact.Path;
+
+        // Try same major.minor, highest patch
+        var compatible = installedVersions
+            .Where(x => x.Version!.Major == requested.Major && x.Version.Minor == requested.Minor)
+            .FirstOrDefault();
+        if (compatible.Path is not null) return compatible.Path;
+
+        // Try same major, highest minor.patch
+        var sameMajor = installedVersions
+            .Where(x => x.Version!.Major == requested.Major)
+            .FirstOrDefault();
+        return sameMajor.Path;
     }
 
     private static List<MetadataReference> ResolveDependencies(string targetAssemblyPath, bool debug)
